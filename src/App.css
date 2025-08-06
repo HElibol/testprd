@@ -1,0 +1,136 @@
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Ant Design customizations */
+.ant-layout-sider-collapsed .ant-menu-item .ant-menu-item-icon {
+  margin-right: 0;
+}
+
+.ant-layout-content {
+  overflow: initial;
+}
+
+/* Sidebar kapanma zorlaması */
+.sidebar-closed .ant-layout-sider {
+  width: 0px !important;
+  min-width: 0px !important;
+  max-width: 0px !important;
+  flex: 0 0 0px !important;
+  transform: translateX(-100%) !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+}
+
+.sidebar-closed .ant-layout-sider-collapsed {
+  width: 0px !important;
+  min-width: 0px !important;
+  max-width: 0px !important;
+  flex: 0 0 0px !important;
+}
+
+/* Mobil durumda sidebar açık olduğunda body scroll'u engelle */
+.sidebar-open {
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .ant-layout-sider-collapsed {
+    width: 0px !important;
+    min-width: 0px !important;
+    transform: translateX(-100%) !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+}
+
+/* Card hover effects */
+.ant-card {
+  transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Form improvements */
+.ant-form-item-label > label {
+  font-weight: 600;
+}
+
+/* Button improvements */
+.ant-btn-primary {
+  transition: all 0.3s ease;
+}
+
+.ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+/* Progress circle improvements */
+.ant-progress-circle .ant-progress-text {
+  font-weight: 600;
+}
+
+/* Table improvements */
+.ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .ant-layout-sider {
+    position: fixed !important;
+    z-index: 1000;
+    height: 100vh;
+  }
+  
+  .ant-layout-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
