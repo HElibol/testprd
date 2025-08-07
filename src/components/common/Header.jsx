@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Avatar, Dropdown, Space, Typography, Button, message, Modal, Form, Input, Card, Tag } from 'antd';
+import { Layout, Avatar, Dropdown, Space, Typography, Button, message, Modal, Form, Input, Card, Tag, Select } from 'antd';
 import {
   UserOutlined,
   LogoutOutlined,
@@ -36,6 +36,8 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
   const [isEndProductionOpen, setIsEndProductionOpen] = useState(false);
   const [form] = Form.useForm();
   const [selectedWorkcenterInfo, setSelectedWorkcenterInfo] = useState(null);
+  const [shifts, setShifts] = useState([]);
+  const [selectedShift, setSelectedShift] = useState(null);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -47,6 +49,64 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     window.addEventListener('resize', checkScreenSize);
     
     return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Vardiya bilgilerini çek
+  useEffect(() => {
+    const fetchShifts = async () => {
+      try {
+        const response = await authAxios.get('/canias/list-shifts');
+        const result = response.data;
+        
+        if (result.success === "true" && result.data?.TSHIFTLIST?.ROW) {
+          const shiftOptions = result.data.TSHIFTLIST.ROW.map(shift => ({
+            value: shift.SHIFT,
+            label: `Vardiya ${shift.SHIFT} (${shift.STARTTIME} - ${shift.FINISHTIME})`
+          }));
+          setShifts(shiftOptions);
+          
+          // İlk vardiyayı varsayılan olarak seç
+          if (shiftOptions.length > 0 && !selectedShift) {
+            setSelectedShift(shiftOptions[0].value);
+          }
+        }
+      } catch (error) {
+        console.error('Vardiya bilgileri çekilemedi:', error);
+        message.error('Vardiya bilgileri yüklenemedi!');
+      }
+    };
+
+    fetchShifts();
+  }, []);
+
+
+  // Duruş sebeplerini çek
+  useEffect(() => {
+    const fetchFailureCodes = async () => {
+      try {
+        const response = await authAxios.get('/canias/list-failure');
+        const result = response.data;
+        
+        if (result.success === "true" && result.data?.TFAILURECODE?.ROW) {
+          const failureOptions = result.data.TFAILURECODE.ROW.map(failure => ({
+            value: failure.FAILURECODE,
+            label: `${failure.FAILURECODE} - ${failure.STEXT}`,
+            isIdle: failure.ISIDLE
+          }));
+          setFailureCodes(failureOptions);
+          
+          // İlk duruş sebebini varsayılan olarak seç
+          if (failureOptions.length > 0 && !selectedFailureCode) {
+            setSelectedFailureCode(failureOptions[0].value);
+          }
+        }
+      } catch (error) {
+        console.error('Duruş sebepleri çekilemedi:', error);
+        message.error('Duruş sebepleri yüklenemedi!');
+      }
+    };
+
+    fetchFailureCodes();
   }, []);
 
   // Seçili iş merkezi bilgilerini al
@@ -70,6 +130,11 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleShiftChange = (value) => {
+    setSelectedShift(value);
+    console.log('Seçilen vardiya:', value);
   };
 
   const getCurrentStatus = () => {
@@ -139,6 +204,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       const params = {
         workcenterId: selectedWorkcenter,
         PSCONFIRMATION: selectedRow.confirmation,
+        PSSHIFTNUMBER: selectedShift,
       };
 
       console.log("Üretim başlatılıyor:", params);
@@ -214,7 +280,8 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         OPERATION: parseInt(selectedRow.operation),
         BOMLEVEL: parseInt(selectedRow.bomLevel),
         PDCOUTPUT: parseInt(values.pdcOutput),
-        PDCSCRAP: parseInt(values.pdcScrap)
+        PDCSCRAP: parseInt(values.pdcScrap),
+        PSSHIFTNUMBER: selectedShift,
       };
 
       console.log("Üretim bitiriliyor:", params);
@@ -285,7 +352,8 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         POTYPE: selectedRow.poType,
         PRDORDER: selectedRow.prdOrder,
         OPERATION: parseInt(selectedRow.operation),
-        BOMLEVEL: parseInt(selectedRow.bomLevel)
+        BOMLEVEL: parseInt(selectedRow.bomLevel),
+        PSSHIFTNUMBER: selectedShift,
       };
 
       console.log("Duruş başlatılıyor:", params);
@@ -348,7 +416,8 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         POTYPE: selectedRow.poType,
         PRDORDER: selectedRow.prdOrder,
         OPERATION: parseInt(selectedRow.operation),
-        BOMLEVEL: parseInt(selectedRow.bomLevel)
+        BOMLEVEL: parseInt(selectedRow.bomLevel),
+        PSSHIFTNUMBER: selectedShift,
       };
 
       console.log("Duruş bitiriliyor:", params);
@@ -413,7 +482,8 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         OPERATION: parseInt(selectedRow.operation),
         BOMLEVEL: parseInt(selectedRow.bomLevel),
         PDCOUTPUT: 1,
-        PDCSCRAP: 0
+        PDCSCRAP: 0,
+        PSSHIFTNUMBER: selectedShift,
       };
 
       console.log("Başlat Bitir işlemi yapılıyor:", params);
@@ -569,28 +639,17 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
               alignItems: 'center',
               gap: '8px'
             }}>
-              <Tag 
-                color={selectedWorkcenterInfo.status === 'Aktif' ? 'green' : 'red'}
-                style={{ 
-                  margin: 0,
-                  fontSize: isMobile ? '10px' : '11px',
-                  fontWeight: 'bold'
+              <Select
+                value={selectedShift}
+                onChange={handleShiftChange}
+                style={{
+                  minWidth: isMobile ? '120px' : '150px',
+                  fontSize: isMobile ? '11px' : '12px'
                 }}
-              >
-                {selectedWorkcenterInfo.status}
-              </Tag>
-              {selectedRow && (
-                <Tag 
-                  color="blue"
-                  style={{ 
-                    margin: 0,
-                    fontSize: isMobile ? '10px' : '11px',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  İş Emri: {selectedRow.confirmation}
-                </Tag>
-              )}
+                placeholder="Vardiya Seçin"
+                options={shifts}
+                size={isMobile ? 'small' : 'middle'}
+              />
             </div>
           </div>
         </div>
@@ -950,6 +1009,8 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
           </Form.Item>
         </Form>
       </Modal>
+
+
     </>
   );
 };
