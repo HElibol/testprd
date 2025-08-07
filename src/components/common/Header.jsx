@@ -21,7 +21,7 @@ import { authAxios } from '../../services/api';
 const { Header: AntHeader } = Layout;
 const { Text, Title } = Typography;
 
-const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selectedRow, selectedWorkcenter }) => {
+const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selectedRow, selectedWorkcenter, refreshOperations }) => {
   const { user, logout } = useAuth();
   const [buttonLoading, setButtonLoading] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -151,6 +151,21 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         updateWorkOrderStatus(selectedRow.confirmation, result.data);
         console.log('🟢 Status güncellendi:', selectedRow.confirmation, '=', result.data);
         message.success(`Üretim başarıyla başlatıldı!\nİş Merkezi: ${selectedWorkcenter}\nOnay No: ${selectedRow.confirmation}\nYeni Status: ${result.data}`);
+        
+        // İş emri listesini yenile
+        if (refreshOperations && selectedWorkcenter) {
+          console.log('🔄 İş emri listesi yenileniyor...');
+          console.log('📞 refreshOperations fonksiyonu çağrılıyor:', typeof refreshOperations);
+          setTimeout(() => {
+            console.log('⏰ 1 saniye sonra yenileme başlıyor...');
+            refreshOperations(selectedWorkcenter);
+            console.log('✅ refreshOperations çağrısı tamamlandı');
+          }, 1000); // 1 saniye bekle
+        } else {
+          console.log('❌ refreshOperations fonksiyonu bulunamadı veya selectedWorkcenter yok');
+          console.log('refreshOperations:', typeof refreshOperations);
+          console.log('selectedWorkcenter:', selectedWorkcenter);
+        }
       } else if (result.success === false) {
         const errorMsg = result.error?.message || result.error?.description || result.message || 'Bilinmeyen hata';
         console.log('🔴 Üretim Başlat API FAILED:', result);
@@ -215,6 +230,21 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         message.success(`Üretim başarıyla bitirildi!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}\nÜretilen: ${values.pdcOutput}\nFire: ${values.pdcScrap}\nYeni Status: ${result.data}`);
         setIsEndProductionOpen(false);
         form.resetFields();
+        
+        // İş emri listesini yenile
+        if (refreshOperations && selectedWorkcenter) {
+          console.log('🔄 İş emri listesi yenileniyor...');
+          console.log('📞 refreshOperations fonksiyonu çağrılıyor:', typeof refreshOperations);
+          setTimeout(() => {
+            console.log('⏰ 1 saniye sonra yenileme başlıyor...');
+            refreshOperations(selectedWorkcenter);
+            console.log('✅ refreshOperations çağrısı tamamlandı');
+          }, 1000); // 1 saniye bekle
+        } else {
+          console.log('❌ refreshOperations fonksiyonu bulunamadı veya selectedWorkcenter yok');
+          console.log('refreshOperations:', typeof refreshOperations);
+          console.log('selectedWorkcenter:', selectedWorkcenter);
+        }
       } else if (result.success === false) {
         const errorMsg = result.error?.message || result.error?.description || result.message || 'Bilinmeyen hata';
         console.log('🔴 Üretim Bitir API FAILED:', result);
@@ -266,6 +296,21 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       if (result.success === "true") {
         updateWorkOrderStatus(selectedRow.confirmation, result.data);
         message.success(`Duruş başarıyla başlatıldı!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}\nYeni Status: ${result.data}`);
+        
+        // İş emri listesini yenile
+        if (refreshOperations && selectedWorkcenter) {
+          console.log('🔄 İş emri listesi yenileniyor...');
+          console.log('📞 refreshOperations fonksiyonu çağrılıyor:', typeof refreshOperations);
+          setTimeout(() => {
+            console.log('⏰ 1 saniye sonra yenileme başlıyor...');
+            refreshOperations(selectedWorkcenter);
+            console.log('✅ refreshOperations çağrısı tamamlandı');
+          }, 1000); // 1 saniye bekle
+        } else {
+          console.log('❌ refreshOperations fonksiyonu bulunamadı veya selectedWorkcenter yok');
+          console.log('refreshOperations:', typeof refreshOperations);
+          console.log('selectedWorkcenter:', selectedWorkcenter);
+        }
       } else if (result.success === false) {
         const errorMsg = result.error?.message || result.error?.description || result.message || 'Bilinmeyen hata';
         alert(`HATA: ${errorMsg}`);
@@ -314,6 +359,21 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       if (result.success === "true") {
         updateWorkOrderStatus(selectedRow.confirmation, result.data);
         message.success(`Duruş başarıyla bitirildi!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}\nYeni Status: ${result.data}`);
+        
+        // İş emri listesini yenile
+        if (refreshOperations && selectedWorkcenter) {
+          console.log('🔄 İş emri listesi yenileniyor...');
+          console.log('📞 refreshOperations fonksiyonu çağrılıyor:', typeof refreshOperations);
+          setTimeout(() => {
+            console.log('⏰ 1 saniye sonra yenileme başlıyor...');
+            refreshOperations(selectedWorkcenter);
+            console.log('✅ refreshOperations çağrısı tamamlandı');
+          }, 1000); // 1 saniye bekle
+        } else {
+          console.log('❌ refreshOperations fonksiyonu bulunamadı veya selectedWorkcenter yok');
+          console.log('refreshOperations:', typeof refreshOperations);
+          console.log('selectedWorkcenter:', selectedWorkcenter);
+        }
       } else if (result.success === false) {
         const errorMsg = result.error?.message || result.error?.description || result.message || 'Bilinmeyen hata';
         alert(`HATA: ${errorMsg}`);
@@ -371,17 +431,62 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
 
           // Başlat Bitir işlemi sonrası status 1'e dönebilir (varsayılan)
           updateWorkOrderStatus(selectedRow.confirmation, 1);
+          
+          // İş emri listesini yenile
+          if (refreshOperations && selectedWorkcenter) {
+            console.log('🔄 İş emri listesi yenileniyor...');
+            console.log('📞 refreshOperations fonksiyonu çağrılıyor:', typeof refreshOperations);
+            setTimeout(() => {
+              console.log('⏰ 1 saniye sonra yenileme başlıyor...');
+              refreshOperations(selectedWorkcenter);
+              console.log('✅ refreshOperations çağrısı tamamlandı');
+            }, 1000); // 1 saniye bekle
+          } else {
+            console.log('❌ refreshOperations fonksiyonu bulunamadı veya selectedWorkcenter yok');
+            console.log('refreshOperations:', typeof refreshOperations);
+            console.log('selectedWorkcenter:', selectedWorkcenter);
+          }
         } else if (typeof result.data === 'number') {
           // Normal status response (sayı)
           updateWorkOrderStatus(selectedRow.confirmation, result.data);
           alert(`BAŞARILI: İşlem tamamlandı. Yeni Status: ${result.data}`);
           message.success(`Başlat Bitir işlemi başarıyla tamamlandı!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}\nYeni Status: ${result.data}`);
+          
+          // İş emri listesini yenile
+          if (refreshOperations && selectedWorkcenter) {
+            console.log('🔄 İş emri listesi yenileniyor...');
+            console.log('📞 refreshOperations fonksiyonu çağrılıyor:', typeof refreshOperations);
+            setTimeout(() => {
+              console.log('⏰ 1 saniye sonra yenileme başlıyor...');
+              refreshOperations(selectedWorkcenter);
+              console.log('✅ refreshOperations çağrısı tamamlandı');
+            }, 1000); // 1 saniye bekle
+          } else {
+            console.log('❌ refreshOperations fonksiyonu bulunamadı veya selectedWorkcenter yok');
+            console.log('refreshOperations:', typeof refreshOperations);
+            console.log('selectedWorkcenter:', selectedWorkcenter);
+          }
         } else {
           // Diğer success durumları
           alert(`BAŞARILI: İşlem tamamlandı.`);
           message.success(`Başlat Bitir işlemi başarıyla tamamlandı!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}`);
           // Default status 1
           updateWorkOrderStatus(selectedRow.confirmation, 1);
+          
+          // İş emri listesini yenile
+          if (refreshOperations && selectedWorkcenter) {
+            console.log('🔄 İş emri listesi yenileniyor...');
+            console.log('📞 refreshOperations fonksiyonu çağrılıyor:', typeof refreshOperations);
+            setTimeout(() => {
+              console.log('⏰ 1 saniye sonra yenileme başlıyor...');
+              refreshOperations(selectedWorkcenter);
+              console.log('✅ refreshOperations çağrısı tamamlandı');
+            }, 1000); // 1 saniye bekle
+          } else {
+            console.log('❌ refreshOperations fonksiyonu bulunamadı veya selectedWorkcenter yok');
+            console.log('refreshOperations:', typeof refreshOperations);
+            console.log('selectedWorkcenter:', selectedWorkcenter);
+          }
         }
       } else if (result.success === false) {
         const errorMsg = result.error?.message || result.error?.description || result.message || 'Bilinmeyen hata';

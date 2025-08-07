@@ -17,7 +17,8 @@ const Sidebar = ({
   selectedRowKeys,
   setSelectedRowKeys,
   selectedWorkcenter,
-  setSelectedWorkcenter
+  setSelectedWorkcenter,
+  onRefreshOperations
 }) => {
   const [selectedValue, setSelectedValue] = useState(() => {
     // localStorage'dan seçili iş merkezini yükle
@@ -462,6 +463,13 @@ const Sidebar = ({
       setOperationsLoading(false);
     }
   };
+
+  // fetchOperations fonksiyonunu dışarıya expose et
+  useEffect(() => {
+    if (onRefreshOperations) {
+      onRefreshOperations(fetchOperations);
+    }
+  }, [onRefreshOperations]);
 
   const transformOperationsData = (apiData) => {
     if (!Array.isArray(apiData)) {
