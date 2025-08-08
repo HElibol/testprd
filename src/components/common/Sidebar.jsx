@@ -579,11 +579,25 @@ const Sidebar = ({
   const handleRowSelectionChange = async (selectedKeys, selectedRows) => {
     console.log('Selection changed:', { selectedKeys, selectedRows });
     
-    setSelectedRowKeys(selectedKeys);
-    setSelectedRecords(selectedRows);
+    // İş emri tablosu için tek seçim mantığı
+    if (operationsFetched) {
+      // Sadece son seçilen satırı al (radio button davranışı)
+      const lastSelectedKey = selectedKeys[selectedKeys.length - 1];
+      const lastSelectedRow = selectedRows[selectedRows.length - 1];
+      
+      setSelectedRowKeys(lastSelectedKey ? [lastSelectedKey] : []);
+      setSelectedRecords(lastSelectedRow ? [lastSelectedRow] : []);
 
-    localStorage.setItem('selectedRowKeys', JSON.stringify(selectedKeys));
-    localStorage.setItem('selectedRecords', JSON.stringify(selectedRows));
+      localStorage.setItem('selectedRowKeys', JSON.stringify(lastSelectedKey ? [lastSelectedKey] : []));
+      localStorage.setItem('selectedRecords', JSON.stringify(lastSelectedRow ? [lastSelectedRow] : []));
+    } else {
+      // İş merkezi tablosu için çoklu seçim mantığı (değişiklik yok)
+      setSelectedRowKeys(selectedKeys);
+      setSelectedRecords(selectedRows);
+
+      localStorage.setItem('selectedRowKeys', JSON.stringify(selectedKeys));
+      localStorage.setItem('selectedRecords', JSON.stringify(selectedRows));
+    }
 
     const itemType = operationsFetched ? 'iş emri' : 'iş merkezi';
     
@@ -836,7 +850,7 @@ const Sidebar = ({
                         fontSize: isMobile ? '11px' : '12px'
                       }}
                       rowSelection={{
-                        type: 'checkbox',
+                        type: operationsFetched ? 'radio' : 'checkbox',
                         selectedRowKeys,
                         onChange: handleRowSelectionChange,
                         getCheckboxProps: (record) => ({
