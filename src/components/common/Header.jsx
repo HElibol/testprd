@@ -297,7 +297,18 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       return;
     }
 
+    // Form'u sıfırla ve default değerleri ayarla
     form.resetFields();
+    
+    // Default değerleri ayarla: Üretim miktarı için TARGETOUT, Fire miktarı için 0
+    const defaultValues = {
+      pdcOutput: selectedRow.targetOut || 0,  // TARGETOUT değeri varsa kullan, yoksa 0
+      pdcScrap: 0  // Fire miktarı için default 0
+    };
+    
+    // Form'a default değerleri set et
+    form.setFieldsValue(defaultValues);
+    
     setIsEndProductionOpen(true);
   };
 
