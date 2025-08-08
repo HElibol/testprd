@@ -34,10 +34,14 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     }
   });
   const [isEndProductionOpen, setIsEndProductionOpen] = useState(false);
+  const [isStartBreakOpen, setIsStartBreakOpen] = useState(false);
   const [form] = Form.useForm();
+  const [breakForm] = Form.useForm();
   const [selectedWorkcenterInfo, setSelectedWorkcenterInfo] = useState(null);
   const [shifts, setShifts] = useState([]);
   const [selectedShift, setSelectedShift] = useState(null);
+  const [failureCodes, setFailureCodes] = useState([]);
+  const [selectedFailureCode, setSelectedFailureCode] = useState(null);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -77,6 +81,35 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     };
 
     fetchShifts();
+  }, []);
+
+  // Duruş sebeplerini çek
+  useEffect(() => {
+    const fetchFailureCodes = async () => {
+      try {
+        const response = await authAxios.get('/canias/list-failure');
+        const result = response.data;
+        
+        if (result.success === "true" && result.data?.TFAILURECODE?.ROW) {
+          const failureOptions = result.data.TFAILURECODE.ROW.map(failure => ({
+            value: failure.FAILURECODE,
+            label: `${failure.FAILURECODE} - ${failure.STEXT}`,
+            isIdle: failure.ISIDLE
+          }));
+          setFailureCodes(failureOptions);
+          
+          // İlk duruş sebebini varsayılan olarak seç
+          if (failureOptions.length > 0 && !selectedFailureCode) {
+            setSelectedFailureCode(failureOptions[0].value);
+          }
+        }
+      } catch (error) {
+        console.error('Duruş sebepleri çekilemedi:', error);
+        message.error('Duruş sebepleri yüklenemedi!');
+      }
+    };
+
+    fetchFailureCodes();
   }, []);
 
 
@@ -331,8 +364,8 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     }
   };
 
-  const handleStartBreak = async () => {
-    console.log("handleStartBreak");
+  const handleStartBreak = () => {
+    console.log("handleStartBreak - Modal açılıyor");
 
     if (!selectedRow || !selectedRow.confirmation) {
       message.warning('Lütfen önce İş Emirleri tablosundan bir satır seçin!');
@@ -344,6 +377,14 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       return;
     }
 
+    // Modal'ı aç
+    setIsStartBreakOpen(true);
+    breakForm.resetFields();
+  };
+
+  const handleStartBreakSubmit = async (values) => {
+    console.log("handleStartBreakSubmit - Duruş başlatılıyor");
+
     setButtonLoading('startIdle');
     try {
       const params = {
@@ -354,6 +395,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         OPERATION: parseInt(selectedRow.operation),
         BOMLEVEL: parseInt(selectedRow.bomLevel),
         PSSHIFTNUMBER: selectedShift,
+        FAILURECODE: values.failureCode, // Seçilen duruş sebebi
       };
 
       console.log("Duruş başlatılıyor:", params);
@@ -363,7 +405,13 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
 
       if (result.success === "true") {
         updateWorkOrderStatus(selectedRow.confirmation, result.data);
-        message.success(`Duruş başarıyla başlatıldı!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}\nYeni Status: ${result.data}`);
+        // Seçilen duruş sebebini state'e kaydet
+        setSelectedFailureCode(values.failureCode);
+        message.success(`Duruş başarıyla başlatıldı!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}\nDuruş Sebebi: ${values.failureCode}\nYeni Status: ${result.data}`);
+        
+        // Modal'ı kapat
+        setIsStartBreakOpen(false);
+        breakForm.resetFields();
         
         // İş emri listesini yenile
         if (refreshOperations && selectedWorkcenter) {
@@ -418,6 +466,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         OPERATION: parseInt(selectedRow.operation),
         BOMLEVEL: parseInt(selectedRow.bomLevel),
         PSSHIFTNUMBER: selectedShift,
+        FAILURECODE: selectedFailureCode, // Başlatırken seçilen duruş sebebi
       };
 
       console.log("Duruş bitiriliyor:", params);
@@ -427,7 +476,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
 
       if (result.success === "true") {
         updateWorkOrderStatus(selectedRow.confirmation, result.data);
-        message.success(`Duruş başarıyla bitirildi!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}\nYeni Status: ${result.data}`);
+        message.success(`Duruş başarıyla bitirildi!\nİş Merkezi: ${selectedWorkcenter}\nConfirmation: ${selectedRow.confirmation}\nDuruş Sebebi: ${selectedFailureCode}\nYeni Status: ${result.data}`);
         
         // İş emri listesini yenile
         if (refreshOperations && selectedWorkcenter) {
@@ -1004,6 +1053,68 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
                 loading={buttonLoading === 'finishProduction'}
               >
                 Üretimi Bitir
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Duruş Başlat Modal */}
+      <Modal
+        title="Duruş Başlat"
+        open={isStartBreakOpen}
+        onCancel={() => {
+          setIsStartBreakOpen(false);
+          breakForm.resetFields();
+        }}
+        footer={null}
+        width={400}
+      >
+        <Text type="secondary" style={{ fontSize: '14px', marginBottom: '16px', display: 'block' }}>
+          İş Emri: {selectedRow?.confirmation} - {selectedRow?.material}
+        </Text>
+
+        <Form
+          form={breakForm}
+          layout="vertical"
+          onFinish={handleStartBreakSubmit}
+        >
+          <Form.Item
+            label="Duruş Sebebi"
+            name="failureCode"
+            rules={[
+              { required: true, message: 'Lütfen duruş sebebini seçin!' }
+            ]}
+          >
+            <Select
+              placeholder="Duruş sebebini seçin"
+              options={failureCodes}
+              loading={failureCodes.length === 0}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+            <Space>
+              <Button onClick={() => {
+                setIsStartBreakOpen(false);
+                breakForm.resetFields();
+              }}>
+                İptal
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={buttonLoading === 'startIdle'}
+                style={{
+                  background: '#faad14',
+                  borderColor: '#faad14',
+                }}
+              >
+                Duruşu Başlat
               </Button>
             </Space>
           </Form.Item>
