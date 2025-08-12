@@ -21,7 +21,7 @@ import { authAxios } from '../../services/api';
 const { Header: AntHeader } = Layout;
 const { Text, Title } = Typography;
 
-const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selectedRow, selectedWorkcenter, refreshOperations }) => {
+const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selectedRow, selectedWorkcenter, selectedWorkcenterInfo, refreshOperations }) => {
   const { user, logout } = useAuth();
   const [buttonLoading, setButtonLoading] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -37,7 +37,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
   const [isStartBreakOpen, setIsStartBreakOpen] = useState(false);
   const [form] = Form.useForm();
   const [breakForm] = Form.useForm();
-  const [selectedWorkcenterInfo, setSelectedWorkcenterInfo] = useState(null);
+
   const [shifts, setShifts] = useState([]);
   const [selectedShift, setSelectedShift] = useState(null);
   const [failureCodes, setFailureCodes] = useState([]);
@@ -142,15 +142,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     fetchFailureCodes();
   }, []);
 
-  // Seçili iş merkezi bilgilerini al
-  useEffect(() => {
-    if (selectedWorkcenter && selectedRecords && selectedRecords.length > 0) {
-      const workcenterInfo = selectedRecords[0];
-      setSelectedWorkcenterInfo(workcenterInfo);
-    } else {
-      setSelectedWorkcenterInfo(null);
-    }
-  }, [selectedWorkcenter, selectedRecords]);
+
 
   const updateWorkOrderStatus = (confirmation, status) => {
     const newStatuses = {
@@ -238,9 +230,12 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         workcenterId: selectedWorkcenter,
         PSCONFIRMATION: selectedRow.confirmation,
         PSSHIFTNUMBER: selectedShift,
+        RESPONSIBLE: selectedWorkcenterInfo?.responsible || '', // RESPONSIBLE parametresi eklendi
       };
 
-      console.log("Üretim başlatılıyor:", params);
+      console.log("params:", params);
+      console.log("selectedWorkcenterInfo:", selectedWorkcenterInfo);
+
 
       const response = await authAxios.post('/canias/start-production', params);
       const result = response.data;
@@ -277,7 +272,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     } catch (error) {
       console.log("🔴 Üretim Başlatma Network/JS Hatası:", error);
       const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Network hatası';
-      alert(`NETWORK HATASI: ${errorMsg}`);
+      alert(`${errorMsg}`);
       message.error(`Üretim başlatılamadı (Network): ${errorMsg}`);
     } finally {
       setButtonLoading(null);
@@ -301,8 +296,10 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     form.resetFields();
     
     // Default değerleri ayarla: Üretim miktarı için TARGETOUT, Fire miktarı için 0
+    // TARGETOUT değerini tam sayıya çevir, hata durumunda 0 kullan
+    const targetOutput = parseInt(selectedRow.targetOut) || 0;
     const defaultValues = {
-      pdcOutput: selectedRow.targetOut || 0,  // TARGETOUT değeri varsa kullan, yoksa 0
+      pdcOutput: targetOutput,  // TARGETOUT değeri varsa kullan, yoksa 0
       pdcScrap: 0  // Fire miktarı için default 0
     };
     
@@ -326,9 +323,12 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         PDCOUTPUT: parseInt(values.pdcOutput),
         PDCSCRAP: parseInt(values.pdcScrap),
         PSSHIFTNUMBER: selectedShift,
+        RESPONSIBLE: selectedWorkcenterInfo?.responsible || '', // RESPONSIBLE parametresi eklendi
       };
 
       console.log("Üretim bitiriliyor:", params);
+      console.log("selectedWorkcenterInfo:", selectedWorkcenterInfo);
+      console.log("📋 RESPONSIBLE değeri:", selectedWorkcenterInfo?.responsible || 'Belirtilmemiş');
 
       const response = await authAxios.post('/canias/end-production', params);
       const result = response.data;
@@ -368,7 +368,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     } catch (error) {
       console.log("🔴 Üretim Bitirme Network/JS Hatası:", error);
       const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Network hatası';
-      alert(`NETWORK HATASI: ${errorMsg}`);
+      alert(`${errorMsg}`);
       message.error(`Üretim bitirilemedi (Network): ${errorMsg}`);
     } finally {
       setButtonLoading(null);
@@ -407,9 +407,11 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         BOMLEVEL: parseInt(selectedRow.bomLevel),
         PSSHIFTNUMBER: selectedShift,
         FAILURECODE: values.failureCode, // Seçilen duruş sebebi
+        RESPONSIBLE: selectedWorkcenterInfo?.responsible || '', // RESPONSIBLE parametresi eklendi
       };
 
       console.log("Duruş başlatılıyor:", params);
+      console.log("📋 RESPONSIBLE değeri:", selectedWorkcenterInfo?.responsible || 'Belirtilmemiş');
       const response = await authAxios.post('/canias/start-failure', params);
       const result = response.data;
       console.log("Duruş başlatma sonucu:", result);
@@ -447,7 +449,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       }
     } catch (error) {
       const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Network hatası';
-      alert(`NETWORK HATASI: ${errorMsg}`);
+      alert(`${errorMsg}`);
       message.error(`Duruş başlatılamadı (Network): ${errorMsg}`);
     } finally {
       setButtonLoading(null);
@@ -478,9 +480,11 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         BOMLEVEL: parseInt(selectedRow.bomLevel),
         PSSHIFTNUMBER: selectedShift,
         FAILURECODE: selectedFailureCode, // Başlatırken seçilen duruş sebebi
+        RESPONSIBLE: selectedWorkcenterInfo?.responsible || '', // RESPONSIBLE parametresi eklendi
       };
 
       console.log("Duruş bitiriliyor:", params);
+      console.log("📋 RESPONSIBLE değeri:", selectedWorkcenterInfo?.responsible || 'Belirtilmemiş');
       const response = await authAxios.post('/canias/finish-failure', params);
       const result = response.data;
       console.log("Duruş bitirme sonucu:", result);
@@ -512,7 +516,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       }
     } catch (error) {
       const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Network hatası';
-      alert(`NETWORK HATASI: ${errorMsg}`);
+      alert(`${errorMsg}`);
       message.error(`Duruş bitirilemedi (Network): ${errorMsg}`);
     } finally {
       setButtonLoading(null);
@@ -544,9 +548,11 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
         PDCOUTPUT: 1,
         PDCSCRAP: 0,
         PSSHIFTNUMBER: selectedShift,
+        RESPONSIBLE: selectedWorkcenterInfo?.responsible || '', // RESPONSIBLE parametresi eklendi
       };
 
       console.log("Başlat Bitir işlemi yapılıyor:", params);
+      console.log("📋 RESPONSIBLE değeri:", selectedWorkcenterInfo?.responsible || 'Belirtilmemiş');
 
       const response = await authAxios.post('/canias/quick-transactions', params);
       const result = response.data;
@@ -628,7 +634,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       }
     } catch (error) {
       const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Network hatası';
-      alert(`NETWORK HATASI: ${errorMsg}`);
+      alert(`${errorMsg}`);
       message.error(`Başlat Bitir işlemi başarısız (Network): ${errorMsg}`);
     } finally {
       setButtonLoading(null);
@@ -689,7 +695,7 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
                   display: 'block',
                   marginTop: '2px'
                 }}>
-                  {selectedWorkcenterInfo.location} • {selectedWorkcenterInfo.responsible || 'Sorumlu: Belirtilmemiş'}
+                  {selectedWorkcenterInfo.location} • Sorumlu: {selectedWorkcenterInfo.responsible || 'Belirtilmemiş'}
                 </Text>
               </div>
             </div>

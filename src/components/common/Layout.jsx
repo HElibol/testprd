@@ -10,6 +10,7 @@ const Layout = ({ children }) => {
   const [selectedRecords, setSelectedRecords] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedWorkcenter, setSelectedWorkcenter] = useState('');
+  const [selectedWorkcenterInfo, setSelectedWorkcenterInfo] = useState(null);
   const [refreshOperationsFunction, setRefreshOperationsFunction] = useState(null); 
 
   const toggleSidebar = () => {
@@ -93,6 +94,8 @@ const Layout = ({ children }) => {
         selectedWorkcenter={selectedWorkcenter}
         setSelectedWorkcenter={setSelectedWorkcenter}
         onRefreshOperations={setRefreshOperationsFunction}
+        selectedWorkcenterInfo={selectedWorkcenterInfo}
+        setSelectedWorkcenterInfo={setSelectedWorkcenterInfo}
       />
       <AntLayout>
         <Header 
@@ -102,6 +105,7 @@ const Layout = ({ children }) => {
           selectedRowKeys={selectedRowKeys}
           selectedRow={selectedRow}
           selectedWorkcenter={selectedWorkcenter}
+          selectedWorkcenterInfo={selectedWorkcenterInfo}
           refreshOperations={refreshOperationsFunction}
         />
         <Content

@@ -18,7 +18,9 @@ const Sidebar = ({
   setSelectedRowKeys,
   selectedWorkcenter,
   setSelectedWorkcenter,
-  onRefreshOperations
+  onRefreshOperations,
+  selectedWorkcenterInfo,
+  setSelectedWorkcenterInfo
 }) => {
   const [selectedValue, setSelectedValue] = useState(() => {
     // localStorage'dan seçili iş merkezini yükle
@@ -48,6 +50,7 @@ const Sidebar = ({
     }
     return 600;
   });
+
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -89,6 +92,7 @@ const Sidebar = ({
 
             if (foundItem) {
               setSelectedRecords([foundItem]);
+              setSelectedWorkcenterInfo(foundItem); // İş merkezi bilgilerini ayrı state'te tut
               console.log('✅ localStorage\'dan iş merkezi yüklendi:', foundItem.name);
               // Operasyonları yeniden fetch et
               await fetchOperations(savedWorkcenterId);
@@ -104,7 +108,24 @@ const Sidebar = ({
 
         if (savedSelectedRecords) {
           const records = JSON.parse(savedSelectedRecords);
-          setSelectedRecords(records);
+          // localStorage'dan gelen veriyi doğrudan kullanma, workcentersData'dan yeniden al
+          if (workcentersData.length > 0 && savedWorkcenter) {
+            let foundItem = null;
+            for (const stand of workcentersData) {
+              for (const workcenter of stand.children || []) {
+                if (workcenter.value === savedWorkcenter) {
+                  foundItem = workcenter;
+                  break;
+                }
+              }
+              if (foundItem) break;
+            }
+            if (foundItem) {
+              setSelectedRecords([foundItem]);
+            }
+          } else {
+            setSelectedRecords(records);
+          }
         }
 
         if (savedSelectedRowKeys) {
@@ -163,40 +184,46 @@ const Sidebar = ({
       return [];
     }
 
+    console.log('🔍 transformApiDataToTree çağrıldı, API verisi:', apiData);
+
     return apiData.map((stand, index) => ({
       title: stand.standName || `Stand ${index + 1}`,
       value: `stand-${index}`,
       key: `stand-${index}`,
       selectable: false,
-      children: (stand.workcenters || []).map((workcenter, wcIndex) => ({
-        title: `${workcenter.WORKCENTER} - ${workcenter.STEXT}`,
-        value: `${workcenter.WORKCENTER}-${workcenter.COMPANY}-${workcenter.PLANT}`,
-        key: `${workcenter.WORKCENTER}-${workcenter.COMPANY}-${workcenter.PLANT}`,
+      children: (stand.workcenters || []).map((workcenter, wcIndex) => {
+        console.log('🔍 workcenter dönüştürülüyor:', workcenter);
+        console.log('🔍 RESPONSIBLE değeri:', workcenter.RESPONSIBLE);
+        return {
+          title: `${workcenter.WORKCENTER} - ${workcenter.STEXT}`,
+          value: `${workcenter.WORKCENTER}-${workcenter.COMPANY}-${workcenter.PLANT}`,
+          key: `${workcenter.WORKCENTER}-${workcenter.COMPANY}-${workcenter.PLANT}`,
 
-        name: workcenter.WORKCENTER,
-        description: workcenter.STEXT,
-        type: 'İş Merkezi',
-        location: `${workcenter.STAND_NAME}`,
-        workOrderId: workcenter.WORKCENTER,
-        operator: workcenter.RESPONSIBLE || '-',
-        priority: 'Normal',
-        estimatedTime: '-',
-        productCode: '-',
-        quantity: 0,
-        machineType: workcenter.STEXT,
-        company: workcenter.COMPANY,
-        plant: workcenter.PLANT,
-        workcenter: workcenter.WORKCENTER,
-        standName: workcenter.STAND_NAME,
-        stext: workcenter.STEXT,
-        predecessor: workcenter.PREDECESSOR,
-        costcenter: workcenter.COSTCENTER,
-        responsible: workcenter.RESPONSIBLE,
-        stand: workcenter.STAND,
-        wcusage: workcenter.WCUSAGE,
-        validFrom: workcenter.VALIDFROM,
-        validUntil: workcenter.VALIDUNTIL
-      }))
+          name: workcenter.WORKCENTER,
+          description: workcenter.STEXT,
+          type: 'İş Merkezi',
+          location: `${workcenter.STAND_NAME}`,
+          workOrderId: workcenter.WORKCENTER,
+          operator: workcenter.RESPONSIBLE || '-',
+          priority: 'Normal',
+          estimatedTime: '-',
+          productCode: '-',
+          quantity: 0,
+          machineType: workcenter.STEXT,
+          company: workcenter.COMPANY,
+          plant: workcenter.PLANT,
+          workcenter: workcenter.WORKCENTER,
+          standName: workcenter.STAND_NAME,
+          stext: workcenter.STEXT,
+          predecessor: workcenter.PREDECESSOR,
+          costcenter: workcenter.COSTCENTER,
+          responsible: workcenter.RESPONSIBLE || '',
+          stand: workcenter.STAND,
+          wcusage: workcenter.WCUSAGE,
+          validFrom: workcenter.VALIDFROM,
+          validUntil: workcenter.VALIDUNTIL
+        };
+      })
     }));
   };
 
@@ -403,6 +430,7 @@ const Sidebar = ({
         // İş merkezi bilgisini selectedRecords'a ekle (tablo için gerekli)
         setSelectedRecords([selectedItem]);
         setSelectedWorkcenter(newWorkcenter);
+        setSelectedWorkcenterInfo(selectedItem); // İş merkezi bilgilerini ayrı state'te tut
         localStorage.setItem('selectedWorkcenter', value);
         localStorage.setItem('selectedWorkcenterId', newWorkcenter);
 
