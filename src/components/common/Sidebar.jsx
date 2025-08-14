@@ -104,12 +104,18 @@ const Sidebar = ({
           const operations = JSON.parse(savedOperationsData);
           setOperationsData(operations);
           setOperationsFetched(true);
+          console.log('✅ localStorage\'dan operasyon verileri yüklendi, operationsFetched true yapıldı');
         }
 
         if (savedSelectedRecords) {
           const records = JSON.parse(savedSelectedRecords);
-          // localStorage'dan gelen veriyi doğrudan kullanma, workcentersData'dan yeniden al
-          if (workcentersData.length > 0 && savedWorkcenter) {
+          // İş emri tablosu için seçili kayıtları yükle
+          if (operationsFetched && records.length > 0) {
+            // İş emri seçimi - doğrudan kullan
+            setSelectedRecords(records);
+            console.log('✅ localStorage\'dan iş emri seçimi yüklendi:', records);
+          } else if (workcentersData.length > 0 && savedWorkcenter) {
+            // İş merkezi seçimi - workcentersData'dan yeniden al
             let foundItem = null;
             for (const stand of workcentersData) {
               for (const workcenter of stand.children || []) {
@@ -131,6 +137,7 @@ const Sidebar = ({
         if (savedSelectedRowKeys) {
           const keys = JSON.parse(savedSelectedRowKeys);
           setSelectedRowKeys(keys);
+          console.log('✅ localStorage\'dan selectedRowKeys yüklendi:', keys);
         }
       } catch (error) {
         console.log('localStorage yükleme hatası:', error);
@@ -140,7 +147,7 @@ const Sidebar = ({
     if (workcentersData.length > 0) {
       loadSavedData();
     }
-  }, [workcentersData, setSelectedRecords, setSelectedRowKeys, setSelectedWorkcenter]);
+  }, [workcentersData, operationsFetched, setSelectedRecords, setSelectedRowKeys, setSelectedWorkcenter]);
 
   useEffect(() => {
     if (collapsed) {

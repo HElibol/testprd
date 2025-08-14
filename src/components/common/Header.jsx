@@ -112,34 +112,18 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
     fetchFailureCodes();
   }, []);
 
-
-  // Duruş sebeplerini çek
+  // workOrderStatuses'i localStorage'dan yükle
   useEffect(() => {
-    const fetchFailureCodes = async () => {
-      try {
-        const response = await authAxios.get('/canias/list-failure');
-        const result = response.data;
-        
-        if (result.success === "true" && result.data?.TFAILURECODE?.ROW) {
-          const failureOptions = result.data.TFAILURECODE.ROW.map(failure => ({
-            value: failure.FAILURECODE,
-            label: `${failure.FAILURECODE} - ${failure.STEXT}`,
-            isIdle: failure.ISIDLE
-          }));
-          setFailureCodes(failureOptions);
-          
-          // İlk duruş sebebini varsayılan olarak seç
-          if (failureOptions.length > 0 && !selectedFailureCode) {
-            setSelectedFailureCode(failureOptions[0].value);
-          }
-        }
-      } catch (error) {
-        console.error('Duruş sebepleri çekilemedi:', error);
-        message.error('Duruş sebepleri yüklenemedi!');
+    try {
+      const savedStatuses = localStorage.getItem('workOrderStatuses');
+      if (savedStatuses) {
+        const parsedStatuses = JSON.parse(savedStatuses);
+        setWorkOrderStatuses(parsedStatuses);
+        console.log('✅ workOrderStatuses localStorage\'dan yüklendi:', parsedStatuses);
       }
-    };
-
-    fetchFailureCodes();
+    } catch (error) {
+      console.error('workOrderStatuses localStorage yükleme hatası:', error);
+    }
   }, []);
 
 
@@ -163,8 +147,13 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
   };
 
   const getCurrentStatus = () => {
-    if (!selectedRow || !selectedRow.confirmation) return 1;
-    return workOrderStatuses[selectedRow.confirmation] || 1;
+    if (!selectedRow || !selectedRow.confirmation) {
+      console.log('🔍 getCurrentStatus: selectedRow veya confirmation yok, default 1 döndürülüyor');
+      return 1;
+    }
+    const status = workOrderStatuses[selectedRow.confirmation] || 1;
+    console.log('🔍 getCurrentStatus: selectedRow.confirmation:', selectedRow.confirmation, 'status:', status);
+    return status;
   };
 
   const buttonControl = getCurrentStatus();

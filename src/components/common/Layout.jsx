@@ -78,9 +78,20 @@ const Layout = ({ children }) => {
     };
   }, []);
 
-  const selectedRow = selectedRecords.find(record => 
-    selectedRowKeys.includes(record.key)
-  );
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  // selectedRow'u güncelle
+  useEffect(() => {
+    const newSelectedRow = selectedRecords.find(record => 
+      selectedRowKeys.includes(record.key)
+    );
+    console.log('🔄 Layout: selectedRow güncelleniyor:', {
+      selectedRecords: selectedRecords,
+      selectedRowKeys: selectedRowKeys,
+      newSelectedRow: newSelectedRow
+    });
+    setSelectedRow(newSelectedRow);
+  }, [selectedRecords, selectedRowKeys]);
 
   return (
     <AntLayout style={{ minHeight: '100vh' }}>
