@@ -21,7 +21,7 @@ import { authAxios } from '../../services/api';
 const { Header: AntHeader } = Layout;
 const { Text, Title } = Typography;
 
-const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selectedRow, selectedWorkcenter, selectedWorkcenterInfo, refreshOperations }) => {
+const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selectedRow, selectedWorkcenter, selectedWorkcenterInfo, refreshOperations, setUpdateWorkOrderStatusFunction }) => {
   const { user, logout } = useAuth();
   const [buttonLoading, setButtonLoading] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -125,6 +125,13 @@ const Header = ({ collapsed, onToggle, selectedRecords, selectedRowKeys, selecte
       console.error('workOrderStatuses localStorage yükleme hatası:', error);
     }
   }, []);
+
+  // updateWorkOrderStatus fonksiyonunu Layout'a expose et
+  useEffect(() => {
+    if (setUpdateWorkOrderStatusFunction) {
+      setUpdateWorkOrderStatusFunction(() => updateWorkOrderStatus);
+    }
+  }, [setUpdateWorkOrderStatusFunction]);
 
 
 

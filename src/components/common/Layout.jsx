@@ -11,7 +11,8 @@ const Layout = ({ children }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedWorkcenter, setSelectedWorkcenter] = useState('');
   const [selectedWorkcenterInfo, setSelectedWorkcenterInfo] = useState(null);
-  const [refreshOperationsFunction, setRefreshOperationsFunction] = useState(null); 
+  const [refreshOperationsFunction, setRefreshOperationsFunction] = useState(null);
+  const [updateWorkOrderStatusFunction, setUpdateWorkOrderStatusFunction] = useState(null); 
 
   const toggleSidebar = () => {
     // Menüyü kesinlikle kapat/aç - daha agresif yaklaşım
@@ -107,6 +108,7 @@ const Layout = ({ children }) => {
         onRefreshOperations={setRefreshOperationsFunction}
         selectedWorkcenterInfo={selectedWorkcenterInfo}
         setSelectedWorkcenterInfo={setSelectedWorkcenterInfo}
+        updateWorkOrderStatus={updateWorkOrderStatusFunction}
       />
       <AntLayout>
         <Header 
@@ -118,6 +120,7 @@ const Layout = ({ children }) => {
           selectedWorkcenter={selectedWorkcenter}
           selectedWorkcenterInfo={selectedWorkcenterInfo}
           refreshOperations={refreshOperationsFunction}
+          setUpdateWorkOrderStatusFunction={setUpdateWorkOrderStatusFunction}
         />
         <Content
           style={{

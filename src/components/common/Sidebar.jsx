@@ -20,7 +20,8 @@ const Sidebar = ({
   setSelectedWorkcenter,
   onRefreshOperations,
   selectedWorkcenterInfo,
-  setSelectedWorkcenterInfo
+  setSelectedWorkcenterInfo,
+  updateWorkOrderStatus
 }) => {
   const [selectedValue, setSelectedValue] = useState(() => {
     // localStorage'dan seçili iş merkezini yükle
@@ -511,6 +512,16 @@ const Sidebar = ({
       console.warn('Operasyon verisi array formatında değil:', apiData);
       return [];
     }
+
+    // Her operasyon için güncel STATUS değerini workOrderStatuses'e kaydet
+    apiData.forEach((operation) => {
+      if (operation.CONFIRMATION && operation.STATUS !== undefined) {
+        const statusValue = parseInt(operation.STATUS);
+        if (updateWorkOrderStatus) {
+          updateWorkOrderStatus(operation.CONFIRMATION, statusValue);
+        }
+      }
+    });
 
     return apiData.map((operation, index) => ({
       key: operation.CONFIRMATION || operation.PRDORDER || `op-${index}`,
