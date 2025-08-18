@@ -309,10 +309,10 @@ const Sidebar = ({
         width: isMobile ? 70 : 90,
         render: (text) => {
           let color = '#666';
-          if (text === 'Başladı') color = '#1890ff';
-          else if (text === 'Beklemede') color = '#faad14';
-          else if (text === 'Tamamlandı') color = '#52c41a';
-          else if (text === 'Yeni') color = '#722ed1';
+          if (text === 'Bekliyor') color = '#4a9bd8';
+          else if (text === 'Başladı') color = '#d88ba5';
+          else if (text === 'Duruşta') color = '#d3c767';
+          else color = '#666';
 
           return (
             <span style={{
@@ -518,7 +518,7 @@ const Sidebar = ({
       name: operation.PRDORDER,
       description: operation.MATERIAL,
       type: 'İş Emri',
-      status: getOperationStatus(operation.STATUS3, operation.STATUS4),
+      status: getOperationStatus(operation.STATUS),
       location: operation.WORKCENTER,
       workOrderId: operation.PRDORDER,
       operator: operation.CONFIRMPOS || '-',
@@ -556,15 +556,15 @@ const Sidebar = ({
     }));
   };
 
-  const getOperationStatus = (status3, status4) => {
-    if (status3 === '1' && status4 === '0') {
+  const getOperationStatus = (status) => {
+    if (status === '0') {
+      return 'Bekliyor';
+    } else if (status === '4') {
       return 'Başladı';
-    } else if (status3 === '0' && status4 === '1') {
-      return 'Beklemede';
-    } else if (status3 === '1' && status4 === '1') {
-      return 'Tamamlandı';
+    } else if (status === '5') {
+      return 'Duruşta';
     } else {
-      return 'Yeni';
+      return 'Bilinmeyen';
     }
   };
 
